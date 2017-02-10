@@ -40,7 +40,7 @@ func StartMetrics(config config.AppConfig) {
 	http.Handle("/metrics", prometheus.InstrumentHandler("prometheus", handler))
 
 	go func() {
-		err := http.ListenAndServe(config.MetricsPort, nil)
+		err := http.ListenAndServe(config.MetricsPort(), nil)
 		if err != nil {
 			log.Fatal(err)
 			os.Exit(1)

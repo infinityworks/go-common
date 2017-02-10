@@ -9,21 +9,20 @@ import (
 	"github.com/gorilla/mux"
 
 	log "github.com/Sirupsen/logrus"
-	cfg "github.com/infinityworksltd/go-common/config"
 )
 
 type appRequest struct {
-	AppConfig cfg.AppConfig
+	AppConfig interface{}
 	Log       *log.Logger
 	Route
-	H func(config cfg.AppConfig, w http.ResponseWriter, r *http.Request) (status int, body []byte, err error)
+	H func(w http.ResponseWriter, r *http.Request) (status int, body []byte, err error)
 }
 
 func (ar appRequest) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	start := time.Now()
 
-	status, body, err := ar.H(ar.AppConfig, w, r)
+	status, body, err := ar.H(w, r)
 
 	if err != nil {
 		switch status {
@@ -52,7 +51,7 @@ func (ar appRequest) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}).Info(ar.Route.Name)
 }
 
-func NewRouter(config cfg.AppConfig, logger *log.Logger, routes Routes) *mux.Router {
+func NewRouter(logger *log.Logger, routes Routes) *mux.Router {
 
 	router := mux.NewRouter().StrictSlash(true)
 	for _, route := range routes {
@@ -60,10 +59,9 @@ func NewRouter(config cfg.AppConfig, logger *log.Logger, routes Routes) *mux.Rou
 		logger.Info(fmt.Sprintf("Adding route %s with type %s", route.Pattern, route.Method))
 
 		ar := appRequest{
-			AppConfig: config,
-			Log:       logger,
-			Route:     route,
-			H:         route.HandlerFunc,
+			Log:   logger,
+			Route: route,
+			H:     route.HandlerFunc,
 		}
 
 		router.

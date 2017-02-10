@@ -9,7 +9,7 @@ func Start(config config.AppConfig) (logger *log.Logger) {
 
 	logger = log.New()
 	logger.Formatter = &log.JSONFormatter{}
-	setLogLevel(config.LogLevel, logger)
+	setLogLevel(config.LogLevel(), logger)
 
 	return logger
 }

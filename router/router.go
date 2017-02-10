@@ -7,6 +7,8 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
+	"github.com/infinityworksltd/go-common/metrics"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 
 	log "github.com/Sirupsen/logrus"
 )
@@ -23,6 +25,15 @@ func (ar appRequest) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	start := time.Now()
 
 	status, body, err := ar.H(w, r)
+
+	defer func(begun time.Time) {
+		metrics.Instrument(
+			time.Since(begun).Seconds(),
+			status,
+			ar.Route.Method,
+			ar.Route.Name,
+		)
+	}(time.Now())
 
 	if err != nil {
 		switch status {
@@ -72,5 +83,19 @@ func NewRouter(logger *log.Logger, routes Routes) *mux.Router {
 
 	}
 
+	registerMetrics(router)
+
 	return router
+}
+
+func registerMetrics(router *mux.Router) {
+	metrics.Init()
+
+	handler := promhttp.Handler()
+
+	router.
+		Methods("GET").
+		Path("/metrics").
+		Name("Metrics").
+		Handler(handler)
 }

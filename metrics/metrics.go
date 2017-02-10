@@ -1,49 +1,39 @@
 package metrics
 
 import (
-	"log"
-	"net/http"
-	"time"
+	"fmt"
 
-	"os"
-
-	"github.com/infinityworksltd/go-common/config"
 	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 var (
 	// FunctionDurations - Create a summary to track elapsed time of our key functions
-	FunctionDurations = prometheus.NewSummaryVec(
-		prometheus.SummaryOpts{
-			Name:       "function_durations_seconds",
-			Help:       "Function timings for Rancher Exporter",
-			Objectives: map[float64]float64{0.5: 0.05, 0.9: 0.01, 0.99: 0.001},
-		}, []string{"pkg", "fnc"})
+	duration = prometheus.NewHistogramVec(prometheus.HistogramOpts{
+		Name:    "http_request_duration_seconds",
+		Help:    "Request duration seconds for HTTP Request",
+		Buckets: []float64{0.01, 0.025, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 1, 2},
+	}, []string{"method", "name"})
+
+	counter = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "http_request_count",
+			Help: "Total number of HTTP requests",
+		},
+		[]string{"status"},
+	)
 )
 
 // Init registers the prometheus metrics for the measurement of the exporter itsself.
-func Init(config config.AppConfig) {
-	prometheus.MustRegister(FunctionDurations)
-	StartMetrics(config)
+func Init() {
+	prometheus.MustRegister(duration)
+	prometheus.MustRegister(counter)
 }
 
-func RecordFunction(start time.Time, pkgName string, fncName string) {
-	elapsed := float64(time.Since(start))
-	FunctionDurations.WithLabelValues(pkgName, fncName).Observe(elapsed)
-}
+func Instrument(time float64, statusCode int, method string, name string) {
+	l := prometheus.Labels{
+		"status": fmt.Sprint(statusCode),
+	}
 
-func StartMetrics(config config.AppConfig) {
-	// Send metrics to Prometheus Handler
-	handler := promhttp.HandlerFor(prometheus.DefaultGatherer,
-		promhttp.HandlerOpts{})
-	http.Handle("/metrics", prometheus.InstrumentHandler("prometheus", handler))
-
-	go func() {
-		err := http.ListenAndServe(config.MetricsPort(), nil)
-		if err != nil {
-			log.Fatal(err)
-			os.Exit(1)
-		}
-	}()
+	duration.WithLabelValues(method, name).Observe(time)
+	counter.With(l).Inc()
 }

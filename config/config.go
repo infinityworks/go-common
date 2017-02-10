@@ -7,6 +7,7 @@ type AppConfig interface {
 	MetricsPort() string
 	ListenPort() string
 	LogLevel() string
+	ApplicationName() string
 }
 
 type BaseConfig struct {
@@ -14,6 +15,7 @@ type BaseConfig struct {
 	metricsPort string
 	listenPort  string
 	logLevel    string
+	appName     string
 }
 
 func (c BaseConfig) MetricsPath() string {
@@ -32,6 +34,10 @@ func (c BaseConfig) LogLevel() string {
 	return c.logLevel
 }
 
+func (c BaseConfig) ApplicationName() string {
+	return c.appName
+}
+
 func Init() BaseConfig {
 
 	appConfig := BaseConfig{
@@ -39,6 +45,7 @@ func Init() BaseConfig {
 		metricsPort: GetEnv("METRICS_PORT", ":8090"),
 		listenPort:  GetEnv("LISTEN_PORT", "8080"),
 		logLevel:    GetEnv("LOG_LEVEL", "debug"),
+		appName:     GetEnv("APP_NAME", "app"),
 	}
 	return appConfig
 }

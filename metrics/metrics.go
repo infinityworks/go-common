@@ -12,14 +12,14 @@ var (
 		Name:    "http_request_duration_seconds",
 		Help:    "Request duration seconds for HTTP Request",
 		Buckets: []float64{0.01, 0.025, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 1, 2},
-	}, []string{"method", "name"})
+	}, []string{"method", "route_name"})
 
 	counter = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
 			Name: "http_request_count",
 			Help: "Total number of HTTP requests",
 		},
-		[]string{"status", "name"},
+		[]string{"status", "route_name"},
 	)
 )
 
@@ -31,8 +31,8 @@ func Init() {
 
 func Instrument(time float64, statusCode int, method string, name string) {
 	l := prometheus.Labels{
-		"status": fmt.Sprint(statusCode),
-		"name":   name,
+		"status":     fmt.Sprint(statusCode),
+		"route_name": name,
 	}
 
 	duration.WithLabelValues(method, name).Observe(time)

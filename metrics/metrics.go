@@ -19,7 +19,7 @@ var (
 			Name: "http_request_count",
 			Help: "Total number of HTTP requests",
 		},
-		[]string{"status"},
+		[]string{"status", "name"},
 	)
 )
 
@@ -32,6 +32,7 @@ func Init() {
 func Instrument(time float64, statusCode int, method string, name string) {
 	l := prometheus.Labels{
 		"status": fmt.Sprint(statusCode),
+		"name":   name,
 	}
 
 	duration.WithLabelValues(method, name).Observe(time)

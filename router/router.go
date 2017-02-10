@@ -14,8 +14,7 @@ import (
 )
 
 type appRequest struct {
-	AppConfig interface{}
-	Log       *log.Logger
+	Log *log.Logger
 	Route
 	H func(w http.ResponseWriter, r *http.Request) (status int, body []byte, err error)
 }

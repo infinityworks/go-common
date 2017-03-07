@@ -10,6 +10,8 @@ import (
 	"github.com/infinityworksltd/go-common/metrics"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 
+	"encoding/json"
+
 	log "github.com/Sirupsen/logrus"
 )
 
@@ -17,6 +19,10 @@ type appRequest struct {
 	Log *log.Logger
 	Route
 	H func(w http.ResponseWriter, r *http.Request) (status int, body []byte, err error)
+}
+
+type errorResponse struct {
+	Error string `json:"error"`
 }
 
 func (ar appRequest) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -34,19 +40,23 @@ func (ar appRequest) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		)
 	}(time.Now())
 
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+
 	if err != nil {
 		switch status {
 		case http.StatusNotFound:
 			http.NotFound(w, r)
 		case http.StatusInternalServerError:
 			ar.Log.Info(fmt.Sprintf("Status returning internal error: %d", status))
+			writeError(err, w)
 			http.Error(w, http.StatusText(status), status)
 		default:
 			ar.Log.Info(fmt.Sprintf("Status returning something else error: %d", status))
+			writeError(err, w)
 			http.Error(w, http.StatusText(status), status)
 		}
 	} else {
-		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+
 		w.WriteHeader(status)
 		w.Write(body)
 	}
@@ -59,6 +69,21 @@ func (ar appRequest) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		"RespCode":    status,
 		"LogDate":     start,
 	}).Info(ar.Route.Name)
+}
+
+func writeError(e error, w http.ResponseWriter) {
+
+	errResp := errorResponse{Error: fmt.Sprintf("%v", e)}
+	b, err := json.Marshal(errResp)
+
+	if err != nil {
+		m, _ := json.Marshal("System failure, could not marshall out error")
+
+		w.Write(m)
+		return
+	}
+
+	w.Write(b)
 }
 
 func NewRouter(logger *log.Logger, routes Routes) *mux.Router {

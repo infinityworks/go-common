@@ -42,6 +42,8 @@ func (ar appRequest) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 
+	w.WriteHeader(status)
+
 	if err != nil {
 		switch status {
 		case http.StatusNotFound:
@@ -49,15 +51,12 @@ func (ar appRequest) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		case http.StatusInternalServerError:
 			ar.Log.Info(fmt.Sprintf("Status returning internal error: %d", status))
 			writeError(err, w)
-			http.Error(w, http.StatusText(status), status)
 		default:
 			ar.Log.Info(fmt.Sprintf("Status returning something else error: %d", status))
 			writeError(err, w)
-			http.Error(w, http.StatusText(status), status)
+
 		}
 	} else {
-
-		w.WriteHeader(status)
 		w.Write(body)
 	}
 

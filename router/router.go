@@ -1,6 +1,8 @@
 package router
 
 import (
+	"io"
+	"io/ioutil"
 	"net/http"
 
 	"fmt"
@@ -121,4 +123,23 @@ func registerMetrics(router *mux.Router) {
 		Path("/metrics").
 		Name("Metrics").
 		Handler(handler)
+}
+
+// UnmarshaBody Accepts an io.ReadCloser (usually a HTTP request body) and an interface to unmarshal the request into.
+func UnmarshaBody(body io.ReadCloser, s interface{}) error {
+
+	b, err := ioutil.ReadAll(io.LimitReader(body, 1048576))
+
+	if err != nil {
+		return fmt.Errorf("Could not read the JSON request body. Error: %s", err)
+	}
+
+	if err := body.Close(); err != nil {
+		return fmt.Errorf("Could not close the JSON request body. Error: %s", err)
+	}
+	if err := json.Unmarshal(b, &s); err != nil {
+		return fmt.Errorf("Could not unmarshal the request body into the struct you gave us. Error: %s", err)
+	}
+
+	return nil
 }

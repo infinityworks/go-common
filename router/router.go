@@ -24,7 +24,8 @@ type appRequest struct {
 }
 
 type errorResponse struct {
-	Error string `json:"error"`
+	Error string    `json:"error"`
+	Time  time.Time `json:"time"`
 }
 
 func (ar appRequest) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -46,22 +47,6 @@ func (ar appRequest) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(status)
 
-	if err != nil {
-		switch status {
-		case http.StatusNotFound:
-			http.NotFound(w, r)
-		case http.StatusInternalServerError:
-			ar.Log.Info(fmt.Sprintf("Status returning internal error: %d", status))
-			writeError(err, w)
-		default:
-			ar.Log.Info(fmt.Sprintf("Status returning something else error: %d", status))
-			writeError(err, w)
-
-		}
-	} else {
-		w.Write(body)
-	}
-
 	ar.Log.WithFields(log.Fields{
 		"Error":       err,
 		"Type":        "request.run",
@@ -70,11 +55,29 @@ func (ar appRequest) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		"RespCode":    status,
 		"LogDate":     start,
 	}).Info(ar.Route.Name)
+
+	if err != nil {
+		switch status {
+		case http.StatusNotFound:
+			http.NotFound(w, r)
+			return
+		case http.StatusInternalServerError:
+			ar.Log.Errorf("Status returning internal error: %d", status)
+			writeError(err, w)
+			return
+		default:
+			ar.Log.Errorf("Status returning something else error: %d", status)
+			writeError(err, w)
+			return
+		}
+	}
+
+	w.Write(body)
 }
 
 func writeError(e error, w http.ResponseWriter) {
 
-	errResp := errorResponse{Error: fmt.Sprintf("%v", e)}
+	errResp := errorResponse{Error: fmt.Sprintf("%s", e), Time: time.Now()}
 	b, err := json.Marshal(errResp)
 
 	if err != nil {

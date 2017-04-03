@@ -125,8 +125,8 @@ func registerMetrics(router *mux.Router) {
 		Handler(handler)
 }
 
-// UnmarshaBody Accepts an io.ReadCloser (usually a HTTP request body) and an interface to unmarshal the request into.
-func UnmarshaBody(body io.ReadCloser, s interface{}) error {
+// UnmarshalBody Accepts an io.ReadCloser (usually a HTTP request body) and an interface to unmarshal the request into.
+func UnmarshalBody(body io.ReadCloser, s interface{}) error {
 
 	b, err := ioutil.ReadAll(io.LimitReader(body, 1048576))
 

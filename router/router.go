@@ -29,6 +29,7 @@ type errorResponse struct {
 	Time  time.Time `json:"time"`
 }
 
+// ServeHTTP is the main controlling method for the router, and handles calling the controller, and outputting the response.
 func (ar appRequest) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	start := time.Now()
@@ -57,7 +58,7 @@ func (ar appRequest) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		"LogDate":     start,
 	}).Info(ar.Route.Name)
 
-	if err != nil {
+	if err != nil && len(body) == 0 {
 		switch status {
 		case http.StatusNotFound:
 			http.NotFound(w, r)
@@ -76,6 +77,7 @@ func (ar appRequest) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.Write(body)
 }
 
+// writeError accepts an error and a response writer, and will output the error or die trying
 func writeError(e error, w http.ResponseWriter) {
 
 	errResp := errorResponse{Error: fmt.Sprintf("%s", e), Time: time.Now()}
@@ -91,6 +93,7 @@ func writeError(e error, w http.ResponseWriter) {
 	w.Write(b)
 }
 
+// NewRouter creates a new MUX router to operate with
 func NewRouter(logger *log.Logger, routes Routes) *mux.Router {
 
 	router := mux.NewRouter().StrictSlash(true)
@@ -117,6 +120,7 @@ func NewRouter(logger *log.Logger, routes Routes) *mux.Router {
 	return router
 }
 
+// registerMetrics registers the basic metrics endpoints inside the router
 func registerMetrics(router *mux.Router) {
 	metrics.Init()
 

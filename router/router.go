@@ -10,6 +10,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/infinityworksltd/go-common/metrics"
+	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 
 	"encoding/json"
@@ -145,4 +146,16 @@ func UnmarshalBody(body io.ReadCloser, s interface{}) error {
 	}
 
 	return nil
+}
+
+// MarshalBody takes an interface to Marshal as JSON and returns it, it also handles returning of an error state
+func MarshalBody(s interface{}) (status int, body []byte, err error) {
+	out, err := json.Marshal(s)
+
+	if err != nil {
+		err = errors.Wrap(err, "Could not conver the response into JSON")
+		return http.StatusInternalServerError, []byte(""), err
+	}
+
+	return http.StatusOK, out, nil
 }

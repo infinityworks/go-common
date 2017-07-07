@@ -1,8 +1,8 @@
 package logger
 
 import (
-	log "github.com/Sirupsen/logrus"
 	"github.com/infinityworksltd/go-common/config"
+	log "github.com/sirupsen/logrus"
 )
 
 func Start(config config.AppConfig) (logger *log.Logger) {

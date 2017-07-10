@@ -1,7 +1,7 @@
 package logger
 
 import (
-	"github.com/infinityworksltd/go-common/config"
+	"github.com/infinityworks/go-common/config"
 	log "github.com/sirupsen/logrus"
 )
 

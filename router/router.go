@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
-	"github.com/infinityworksltd/go-common/metrics"
+	"github.com/infinityworks/go-common/metrics"
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 

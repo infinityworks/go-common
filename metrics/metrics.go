@@ -7,13 +7,14 @@ import (
 )
 
 var (
-	// FunctionDurations - Create a summary to track elapsed time of our key functions
+	// duration - Create a summary to track elapsed time of our key functions
 	duration = prometheus.NewHistogramVec(prometheus.HistogramOpts{
 		Name:    "http_request_duration_seconds",
 		Help:    "Request duration seconds for HTTP Request",
 		Buckets: []float64{0.01, 0.025, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 1, 2},
 	}, []string{"method", "route_name"})
 
+	// counter - Create a counter metric to track executions of key functions
 	counter = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
 			Name: "http_request_count",
